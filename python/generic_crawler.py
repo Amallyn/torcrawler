@@ -39,7 +39,7 @@ import pymysql.cursors
 # crc32
 import zlib
 
-# 🗲 sha256  🗲  :)
+# 🗲 sha256  🗲 
 from hashlib import sha256
 #from hashlib import sha1
 
