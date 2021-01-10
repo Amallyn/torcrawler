@@ -28,6 +28,8 @@ from zlib import crc32
 
 # 🗲  sha256  🗲 
 from hashlib import sha256
+# ₿
+# rcv_addr = '3K3dut8m6sXaDYuXqDvVzfy284CTtU1rDQ'
 #from hashlib import sha1
 
 from settings import DATABASES
