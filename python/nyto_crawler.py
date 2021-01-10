@@ -37,9 +37,9 @@ from urllib.parse import urljoin
 import pymysql.cursors
 
 # Our frontier
-from crawl_frontier import CrawlFrontier
+from frontier import CrawlFrontier
 
-from generic_crawler import WebPage, GenericCrawler
+from crawler import WebPage, GenericCrawler
 
 class NytPage(WebPage):
     def __init__(self, url=u'', save_dir = u'./'):
@@ -63,30 +63,91 @@ class NytPage(WebPage):
             
             # url root (eg.: https://toto.com/)
             url_base = urljoin(self.url, '/')
+            # ignores ugly, but faster this way
             # ignore Spanish and French pages
             prefix_es = '/es/'
             url_base_es_ignore = urljoin(self.url, prefix_es)
             prefix_fr = '/fr/'
             url_base_fr_ignore = urljoin(self.url, prefix_fr)
+            prefix_newsletters = '/newsletters'
+            url_base_newsletters = urljoin(self.url, prefix_newsletters)
+            prefix_ca = '/ca/'
+            url_base_ca = urljoin(self.url, prefix_ca)
+            prefix_2021 = '/2021/'
+            url_base_2021 = urljoin(self.url, prefix_2021)
+            prefix_world = '/section/world'
+            url_base_world = urljoin(self.url, prefix_world)
+            prefix_videoworld = '/video/world'
+            url_base_videoworld = urljoin(self.url, prefix_videoworld)
+            prefix_food = '/section/food'
+            url_base_food = urljoin(self.url, prefix_food)
+            prefix_arts = '/section/arts'
+            url_base_arts = urljoin(self.url, prefix_arts)
+            prefix_sports = '/section/sports'
+            url_base_sports = urljoin(self.url, prefix_sports)
+            prefix_science = '/section/science'
+            url_base_science = urljoin(self.url, prefix_science)
+            prefix_books = '/section/books'
+            url_base_books = urljoin(self.url, prefix_books)
+            prefix_dealbook = '/section/business/dealbook'
+            url_base_dealbook = urljoin(self.url, prefix_dealbook)
+            prefix_pagesdealbook = '/pages/business/dealbook'
+            url_base_pagesdealbook = urljoin(self.url, prefix_pagesdealbook)
             # nyregion only
             prefix_nyregion = '/section/nyregion'
             url_base_nyregion = urljoin(self.url, prefix_nyregion)
+
+            # ignore list
+            ignore_suffixes = ['/es/', '/fr/', '/ca/', '/newsletters', '/2021/',
+                            '/2020/01/', '/2020/02/', '/2020/03/', '/2020/04/', '/2020/05/', '/2020/06/',
+                            '/2020/07/', '/2020/08/', '/2020/09/', '/2020/10/',
+                            '/2019/', '/2018/', '/2017/', '/2016/', '/2015/', '/2014/',
+                            '/section/world', '/video/world', '/section/food', '/section/arts',
+                            '/section/sports', '/section/science', '/section/books', '/section/travel', 
+                            '/section/realestate', '/section/fashion', '/section/technology',
+                            '/section/politics', '/section/business', '/section/style',
+                            '/section/style/love', '/section/us', '/section/video', '/section/interactive',
+                            '/section/t-magazine',
+                            'section/fashion', '/issue/fashion',
+                            '/section/business/dealbook', '/pages/business/dealbook',
+                            '/privacy'
+                            ]
+            ignore_urls = [urljoin(self.url, suffix) for suffix in ignore_suffixes]
             
-            # list comprehension readability/optimization tradeoff
-            # absolute links
-            links_href_absolute_startswith = [link.get('href') for link in links if link and link.get('href') and link.get('href').startswith(url_base)
-                                and not link.get('href').startswith(url_base_es_ignore)
-                                and not link.get('href').startswith(url_base_fr_ignore)
-                                ]
-            # relative links
-            links_href_relative = [ urljoin(self.url, link.get('href')) for link in links if link and link.get('href') and link.get('href').startswith('/')
-                                and link.get('href') != '/' and not link.get('href').startswith('/#')
-                                and not link.get('href').startswith(prefix_es)
-                                and not link.get('href').startswith(prefix_fr)
-                                ]
-                                
-            self.links_href = links_href_absolute_startswith + links_href_relative
-            print(u'Web Page:',len(links_href_absolute_startswith), u'absolute links and',len(links_href_relative), u'relative links found')
+            links_href_absolute = []
+            links_href_relative = []
+            for link in links:
+                if link and link.get('href'):
+                    link_href = link.get('href')
+                    ignore_link = False
+                    # only keep website links, drop the rest
+                    # absolute url
+                    if link_href.startswith(url_base):
+                        for ignore_url in ignore_urls:
+                            if link_href.startswith(ignore_url):
+                                self.ignored_links.add(link_href)
+                                ignore_link = True
+                                break
+                        if ignore_link:
+                            ignore_link = False
+                        else:
+                            links_href_absolute.append(link_href)
+                    # relative link
+                    elif link_href.startswith('/') and link_href != '/' and not link_href.startswith('/#'): 
+                        for ignore_suffix in ignore_suffixes:
+                            if link_href.startswith(ignore_suffix):
+                                link_href = urljoin(self.url, link_href)
+                                self.ignored_links.add(link_href)
+                                ignore_link = True
+                                break
+                        if ignore_link:
+                            ignore_link = False
+                        else:
+                            link_href = urljoin(self.url, link_href)
+                            links_href_relative.append(link_href)
+            self.links_href = links_href_absolute + links_href_relative
+            print(u'Web Page:',len(links_href_absolute), u'absolute links and',len(links_href_relative), u'relative links found')
+                    
 
             return self.links_href
 
@@ -140,9 +201,17 @@ class NytCrawler(GenericCrawler):
 
                         self.frontier.page_crawled(web_page.response)
                         print('Crawled', web_page.response.url, '(found', len(links), 'urls)')
+                        if web_page.url != web_page.response.url:
+                            print('!!! Different response !!!')
+                            print('url: ', web_page.url)
+                            print('response url: ', web_page.response.url)
     
                         if links:
                             self.frontier.links_extracted(web_page.response.request, links)
+
+                        if web_page.ignored_links:
+                            self.frontier.ignored_pages.update(web_page.ignored_links)
+                            
                     except requests.RequestException as e:
                         error_code = type(e).__name__
                         #request_error(request, error_code)

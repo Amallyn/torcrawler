@@ -6,6 +6,18 @@ crawl frontier
 Inspired by Frontera Frontier Class
 """
 
+__usage__ = u"""TODO - Usage: python3 frontier.py [options] [url]
+
+Options:
+  -u ..., --url=...       Website URL to crawl
+  -h, --help              show this help
+  -p, --path              www path where files were stored eg. /var/www
+  -d                      show debugging information
+
+Examples:
+  python3 frontier.py --url='https://www.nytimes3xbfgragh.onion/' --path='/var/www'
+"""
+
 __author__ = u"M0t13y"
 __version__ = u"$Revision: 0.01 $"
 __date__ = u"$Date: 2021/05/01 11:45:00 $"
@@ -22,16 +34,16 @@ from urllib.parse import urlsplit
 # html parser
 from bs4 import BeautifulSoup
 
-# Serialize progress
-from crawl_serialize import CrawlWorkbook, WORKSHEET_CRAWLED_PAGES, WORKSHEET_PAGES_TO_CRAWL
+from settings import WWW_DIR, SEEDS, WORKBOOK
 
-from weighted_link import WeightedLink
+# Serialize progress
+from workbook import CrawlWorkbook
+
+from link import WeightedLink
 
 DEFAULT_LINK_WEIGHT = 1024
 
 class CrawlFrontier():
-    # starting urls
-    seeds = {} 
     # links to crawl
     links = []
     # links crawled
@@ -41,40 +53,31 @@ class CrawlFrontier():
     weighted_links = []
     # weighted links crawled
     weighted_links_done = []
+    # weighted    
+    ignore_seeds = {}
+    # weighted    
+    ignored_pages = set()
 
-    # storage path
-    www_dir = u'/var/www'
-    # eg. /var/www/html
-    html_dir = os.path.join(www_dir, u'html')
-    # eg. /var/www/html/www.nytimes3xbfgragh.onion/
-    seed_dir = html_dir
-    
-    # progress saved in a file
-    file_name = u''
     crawl_book = None
     
-    def __init__(self, seeds=['https://apple.com']):
+    def __init__(self, seeds=SEEDS):
         """ init with seeds
         
         Init with seeds
         Create/Open a file for storing progress
         """
-        self.seeds = seeds
-        self.links = seeds
-            
-        # progress file name
-        # based on the first website eg. www.nytimes3xbfgragh.onion
-        # eg. self.seed_dir /var/www/html/www.nytimes3xbfgragh.onion/
-        #     self.file_name /var/www/html/www.nytimes3xbfgragh.onion.xlsx
-        self.seed_dir = os.path.join(self.html_dir, urlsplit(self.seeds[0]).netloc)
-        if not os.path.exists(self.seed_dir):
-            os.makedirs(self.seed_dir)
-        self.file_name = os.path.join(self.html_dir, urlsplit(self.seeds[0]).netloc + '.xlsx')
-        # progress serialize
-        self.crawl_book = CrawlWorkbook(self.file_name)
-        # retrieve weighted_links and weighted_links_done 
-        weighted_links = self.crawl_book.wb_open()
-        if weighted_links is None:
+        self.links = list(seeds)
+
+        self.crawl_book = CrawlWorkbook(path=WWW_DIR, url=self.links[0])
+        self.crawl_book.wb_open()
+
+        # retrieve weighted_links, weighted_links_done...
+        self.weighted_links = self.crawl_book.weighted_links        
+        self.weighted_links_done = self.crawl_book.weighted_links_done       
+        self.ignore_seeds =  self.crawl_book.ignore_seeds
+        self.ignored_pages =  self.crawl_book.ignored_pages
+        
+        if self.weighted_links is None:
             # No links or no file
             for link in self.links:
                 self.weighted_links.append(WeightedLink(link, '',
@@ -82,11 +85,10 @@ class CrawlFrontier():
                                            DEFAULT_LINK_WEIGHT,
                                            ''))
         else:
-            self.weighted_links_done = weighted_links[0]
-            self.weighted_links = weighted_links[1]
             # Maintain links and links_done for now
             for weighted_link in self.weighted_links:
                 self.links.append(weighted_link.url) 
+        if self.weighted_links_done is not None:
             for weighted_link in self.weighted_links_done:
                 self.links_done.append(weighted_link.url) 
 
@@ -150,18 +152,19 @@ class CrawlFrontier():
                 self.weighted_link_remove(weighted_link)
                 self.weighted_links_done.append(weighted_link)
                 
-                self.crawl_book.ws_writeln(WORKSHEET_CRAWLED_PAGES, weighted_link)
                 #print('page_crawled None: ', weighted_link)
             else:
                 self.weighted_links_done.append(weighted_link)
                 self.weighted_link_remove(weighted_link)
 
-                self.crawl_book.ws_writeln(WORKSHEET_CRAWLED_PAGES, weighted_link)
 
-                #print('page_crawled: ', weighted_link)
+            self.crawl_book.ws_writeln(WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE'], weighted_link)
             self.crawl_book.wb_save()
+            #print('page_crawled: ', weighted_link)
+
+            self.crawl_book.ws_writerows(WORKBOOK['crawler']['worksheet']['ignoredpages']['TITLE'], self.ignored_pages)
         
-        print('Frontier: ', len(self.links), 'pages to crawl and', len(self.links_done), 'crawled pages')
+        print('Frontier: ', len(self.links), 'pages to crawl -', len(self.links_done), 'crawled pages -', len(self.ignored_pages), 'ignored pages')
         
     def get_next_urls(self, max_n_requests=10):
         """
@@ -169,26 +172,15 @@ class CrawlFrontier():
         Parameters:	
 
         max_next_requests (int) – Maximum number of urls to be returned by this method.
-        kwargs (dict) – A parameters from downloader component.
 
         Returns:	
 
-        list of urls.
+        list of weighted links.
         """
         # return first max_n_requests links
         return self.links[:max_n_requests]
-        #return self.weigthed_links[:max_n_requests]
+        #return self.weighted_links[:max_n_requests]
         
-    def add_seeds(self, seeds=['https://apple.com']):
-        """
-        add seed urls to crawl
-        
-        eg. seeds=['https://site01.com/', 'https://site02.com/']
-        TO DELETE - useless method
-        """
-        self.seeds = seeds
-        self.links = seeds
-
     def links_extracted(self, reponse, links, weighted_links=None):
         """
         add links to crawl found in response (from request)
@@ -202,22 +194,108 @@ class CrawlFrontier():
         # At least one new link, update Pages to crawl Worksheet
         # /!\ If you need to test without the WeightedLink class /!\
         if links[0]:
-            self.crawl_book.ws_reset(WORKSHEET_PAGES_TO_CRAWL)
             if weighted_links is None:
+                weighted_links = []
                 for url in self.links:
                     weighted_link = WeightedLink(url, '',
                                                 '',
                                                 DEFAULT_LINK_WEIGHT,
                                                 '')
-                    self.weighted_links.append(weighted_link)
-                    self.crawl_book.ws_writeln(WORKSHEET_PAGES_TO_CRAWL, weighted_link)
+                    weighted_links.append(weighted_link)
+            # TODO: check for dupes with set before unless checked before the call
+            self.weighted_links.extend(weighted_links)
 
-                self.crawl_book.wb_save()
-            else:
-                # append weighted_links
-                pass
+            self.crawl_book.ws_writeln(WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE'], weighted_link)
+
+            # TODO: check for dupes with set before unless checked before the call
+            wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
+            self.crawl_book.ws_appendrows(wbwsname, weighted_links)
         
+class Usage(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+        
+def main(argv=None):
+    """
+    main
+    """
+    import getopt
+    if argv is None:
+        argv = sys.argv
+
+    try:
+        try:                                
+            opts, args = getopt.getopt(argv, "hup:d", ["help", "url=", "path="])
+        except getopt.error as msg:
+             raise Usage(msg)            
+        url = u'http://localhost'
+        path = u'/var/www'
+        for opt, arg in opts:
+            if opt in ("-h", "--help"):
+                print(__usage__)                   
+                sys.exit()                  
+            elif opt == '-d':
+                global _debug               
+                _debug = 1                  
+            elif opt in ("-u", "--url"):
+                url = arg               
+            elif opt in ("-p", "--path"):
+                path = arg               
+    except Usage as err:
+        print >>sys.stderr, err.msg
+        print >>sys.stderr, "for help use --help"
+        return 2
+
+    if len(argv)<2:
+        print("Arguments error")
+        print(__usage__)
+        sys.exit(2)
+
+    w_l_00 = WeightedLink(u'https://www.apple.xlsx/',
+                      u'New York Times',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      1024,
+                      u'bla bla')
+                      
+    w_l_01 = WeightedLink(u'https://www.apple.xlsx/mehpage',
+                      u'New York Times - Meh',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      512,
+                      u'meh')
+                      
+    w_l_02 = WeightedLink(u'https://www.apple.xlsx/megapage',
+                      u'New York Times - mega',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      2048,
+                      u'mega bla bla')
+    w_l_03 = WeightedLink(u'https://www.apple.xlsx/useless',
+                      u'New York Times - useless',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      2048,
+                      u'mega no no')
+    w_l_04 = WeightedLink(u'https://www.apple.xlsx/nopage',
+                      u'New York Times - mega',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      2048,
+                      u'no no')
+    
+    cwb = CrawlWorkbook(path, url)
+    cwb.wb_open()
+
+    wbwsname = WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE']
+    cwb.ws_writeln(wbwsname, w_l_00)
+    cwb.wb_save()
+
+    wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
+    cwb.ws_appendrows(wbwsname, [ w_l_01, w_l_02 ])
+
+    wbwsname = WORKBOOK['crawler']['worksheet']['ignoredpages']['TITLE']
+    cwb.ws_writerows(wbwsname, [ w_l_03, w_l_04 ])
+                    
 if __name__ == "__main__":
+    import sys
     print("\n" + __doc__ + "\n" + __copyright__ + "\n" + __license__ +"\n" )
+    main(sys.argv[1:])
+
     
     
