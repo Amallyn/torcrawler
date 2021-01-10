@@ -41,17 +41,23 @@ Development stack:
   -   beautifulsoup
   -   pymysql
 
-# Notes/To do:
-- WIP weight/Priority urls supported, not in full effect
+# Notes
 - Auto resume if file .xlsx is present
-- Use Dockerfile instead of image for tor-socks-proxy
-- Proper git instead of fork
+- crc32 replaced by crc32(sha256(url))
+
+# To do
+- Submit pull request to https://github.com/manticoresoftware/demos - crc32(md5(url)) instead of crc32(title)
+- Lifecycle graph documentation
+- Use boost C++ libray for set/list optimization
+- WIP weight/Priority urls supported, not in full effect
+- Repair Auto resume
+- Use Dockerfile from https://github.com/dperson/torproxy
+- Auto change IP inspired by https://github.com/FrackingAnalysis/PyTorStemPrivoxy
 - Check for DNS Leaks / Add Pihole or a DNS mirror
 - Code cleanup, variable checks
 - Refactor as needed for specific crawling
 - Python tests
-- Documentation with sphinx for example
-- crc32 replaced by crc32(sha256(url))
+- Documentation
 - Tor v3 urls
 
 # Tested on:
