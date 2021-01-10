@@ -46,7 +46,7 @@ Development stack:
 - crc32 replaced by crc32(sha256(url))
 
 # To do
-- Submit pull request to https://github.com/manticoresoftware/demos - crc32(md5(url)) instead of crc32(title)
+- Submit pull request to https://github.com/manticoresoftware/demos - crc32(url) instead of crc32(title)
 - Lifecycle graph documentation
 - Use boost C++ library for set/list optimization
 - Ignore lists and regexp to Ignore pages
