@@ -48,7 +48,8 @@ Development stack:
 # To do
 - Submit pull request to https://github.com/manticoresoftware/demos - crc32(md5(url)) instead of crc32(title)
 - Lifecycle graph documentation
-- Use boost C++ libray for set/list optimization
+- Use boost C++ library for set/list optimization
+- Ignore lists and regexp to Ignore pages
 - WIP weight/Priority urls supported, not in full effect
 - Repair Auto resume
 - Use Dockerfile from https://github.com/dperson/torproxy
