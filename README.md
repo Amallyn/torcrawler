@@ -1,19 +1,19 @@
-# Simple crawler compatible with socks5h proxy
+# Crawler compatible with socks5h proxy
 
 - Crawls https://www.nytimes3xbfgragh.onion/.
 - The search UI will be available at http://localhost:8082.
 - A /your_folder_path/html/www.nytimes3xbfgragh.onion.xlsx file is created with analyzed URLs and URLS yet to retrieve (in the defined folder below - /your_folder_path)
-- id.html pages are saved in */your_folder_path/html/www.nytimes3xbfgragh.onion/ (their ids are displayed on search UI results pages)
-- The website to crawl and the crawler to use are configured in demos/crawler/python/Dockerfile
+- id.html pages are saved in /your_folder_path/html/www.nytimes3xbfgragh.onion/ (their ids are displayed on search UI results pages)
+- The website to crawl and the crawler to use are configured in python/Dockerfile and python/settings.py
 
 Start the Search UI, the tor socks proxy and the web crawler:
 ```
-  git clone https://github.com/M0t13y/demos.git demos
-  cd demos/crawler
+  git clone https://github.com/M0t13y/torcrawler.git torcrawler
+  cd torcrawler
   docker-compose up -d
   cd python
-  docker build -t nyto_crawler .
-  docker run -v /your_folder_path:/var/www --network host -it --rm --name crawl-nytonion nyto_crawler
+  docker build -t nytcrawler .
+  docker run -v /your_folder_path:/var/www --network host -it --rm --name crawl-nytonion nytcrawler
 ```
 
 How to stop the crawler:
@@ -23,7 +23,7 @@ How to stop the crawler:
 
 How to restart the crawler:
 ```
-  docker run -v /your_folder_path:/var/www --network host -it --rm --name crawl-nytonion nyto_crawler
+  docker run -v /your_folder_path:/var/www --network host -it --rm --name crawl-nytonion nytcrawler
 ```
 
 
@@ -40,6 +40,44 @@ Development stack:
   -   requests
   -   beautifulsoup
   -   pymysql
+
+# Life cycle
+
+Most classes and files are documented. Life cycles can also be found in __doc__, __usage__ and main()
+
+Classes & files
+- python/settings.py
+    - [x] All settings like www path and website url to crawl are defined here
+    - [ ] Add proxies settings
+- WeightedLink
+  - [x] url, its weight/priority, date and notes
+  - link.py
+- CrawlWorkbook
+  - [x] Excel .xlsx file handling the CrawlFrontier progress
+  - workbook.py
+- CrawlFrontier
+  - [ ] Optimize with set/list and boost c++ lib 
+  - [x] frontier.py
+- WebPage
+  - [x] crawler.py
+- GenericCrawler
+  - [x] crawler.py
+  - [ ] Repair auto resume, likely in frontier 
+  - [ ] Optimize with set/list and boost c++ lib 
+- NytPage(WebPage)
+  - New York Times Crawler
+  - nytcrawler.py
+  - [ ] Refactor like Webpage
+- NytCrawler(GenericCrawler)
+  - nytcrawler.py
+  - [ ] Refactor like GenericCrawler
+- SearchEngine
+  - [x] Search Engine handled by a Manticore Database
+  - search.py
+- optimize.py
+  - [ ] optimize results
+  - [ ] Check the .xlsx file
+  - [ ] Parse again downloaded wwww/html/www.nytimes3xbfgragh.onion/*.html files
 
 # Notes
 - Auto resume if file .xlsx is present
