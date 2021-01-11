@@ -43,6 +43,11 @@ Development stack:
 
 # Life cycle
 
+**Complete rewrite in progress**
+- Crawler - FrontierManager in progress
+- We'll see for Middleware and backend
+- No Frontera integration for now
+
 Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
 
 Classes & files
