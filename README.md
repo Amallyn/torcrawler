@@ -47,37 +47,47 @@ Most classes and files are documented. Life cycles can also be found in each cla
 
 Classes & files
 - python/settings.py
-    - [x] All settings like www path and website url to crawl are defined here
-    - [ ] Add proxies settings
+  - [x] All settings like www path and website url to crawl are defined here
+  - [ ] Add proxies settings
+  - [x] Life cycle: see main()
 - WeightedLink
   - [x] url, its weight/priority, date and notes
   - [x] link.py
+  - [x] Life cycle: see main()
 - CrawlWorkbook
   - [x] Excel .xlsx file handling the CrawlFrontier progress
   - [x] workbook.py
+  - [x] Life cycle: see main()
+- SearchEngine
+  - [x] Search Engine handled by a Manticore Database
+  - [x] search.py
+  - [x] Life cycle: see main()
 - CrawlFrontier
   - [ ] Optimize with set/list and boost c++ lib 
   - [x] frontier.py
+  - [ ] Life cycle: see main()
 - WebPage
   - [x] crawler.py
+  - [ ] Life cycle: see main()
 - GenericCrawler
   - [x] crawler.py
   - [ ] Repair auto resume, likely in frontier 
   - [ ] Optimize with set/list and boost c++ lib 
+  - [ ] Life cycle: see main()
 - NytPage(WebPage)
   - [x] New York Times Crawler
   - [x] nytcrawler.py
   - [ ] Refactor like Webpage
+  - [ ] Life cycle: see main()
 - NytCrawler(GenericCrawler)
   - [x] nytcrawler.py
   - [ ] Refactor like GenericCrawler
-- SearchEngine
-  - [x] Search Engine handled by a Manticore Database
-  - [x] search.py
+  - [ ] Life cycle: see main()
 - optimize.py
   - [ ] optimize results
   - [ ] Check the .xlsx file
   - [ ] Parse again downloaded wwww/html/www.nytimes3xbfgragh.onion/*.html files
+  - [ ] Life cycle: see main()
 
 # Notes
 - Auto resume if file .xlsx is present
