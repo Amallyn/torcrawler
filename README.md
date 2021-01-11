@@ -51,10 +51,10 @@ Classes & files
     - [ ] Add proxies settings
 - WeightedLink
   - [x] url, its weight/priority, date and notes
-  - link.py
+  - [x] link.py
 - CrawlWorkbook
   - [x] Excel .xlsx file handling the CrawlFrontier progress
-  - workbook.py
+  - [x] workbook.py
 - CrawlFrontier
   - [ ] Optimize with set/list and boost c++ lib 
   - [x] frontier.py
@@ -65,15 +65,15 @@ Classes & files
   - [ ] Repair auto resume, likely in frontier 
   - [ ] Optimize with set/list and boost c++ lib 
 - NytPage(WebPage)
-  - New York Times Crawler
-  - nytcrawler.py
+  - [x] New York Times Crawler
+  - [x] nytcrawler.py
   - [ ] Refactor like Webpage
 - NytCrawler(GenericCrawler)
-  - nytcrawler.py
+  - [x] nytcrawler.py
   - [ ] Refactor like GenericCrawler
 - SearchEngine
   - [x] Search Engine handled by a Manticore Database
-  - search.py
+  - [x] search.py
 - optimize.py
   - [ ] optimize results
   - [ ] Check the .xlsx file
