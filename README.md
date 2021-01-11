@@ -43,7 +43,7 @@ Development stack:
 
 # Life cycle
 
-Most classes and files are documented. Life cycles can also be found in __doc__, __usage__ and main()
+Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
 
 Classes & files
 - python/settings.py
