@@ -24,6 +24,8 @@ __copyright__ = u"Copyright [" + __author__ + "]"
 __license__ = u"Licensed under the Apache License, Version 2.0"
 
 import os
+from pathlib import Path
+
 import requests    
 from datetime import datetime
 # url parser
@@ -31,7 +33,7 @@ from urllib.parse import urlsplit
 # html parser
 from bs4 import BeautifulSoup
 
-from settings import WWW_DIR, WORKBOOK, MAX_N_REQUESTS, SEEDS
+from settings import WWW_DIR, HTML_DIR, WORKBOOK, MAX_N_REQUESTS, SEEDS
 from workbook import CrawlWorkbook
 from link import WeightedLink
 from search import SearchEngine
@@ -97,7 +99,7 @@ class FrontierManager():
             self.requests.append(requests.Request(url=wl.url))
         for wl in self.weighted_links_done:
             self.requests_done.append(requests.Request(url=wl.url))
- 
+        
     def add_seeds(self, seeds):
         """
         add seeds
@@ -130,18 +132,26 @@ class FrontierManager():
         """
         return not self.weighted_links
 
+    def page_save_to_file(self, request, soup):
+        """
+        save page to a #.html file where # is the title crc32
+        TODO: save request
+        """
+        # eg. /var/www/html/apple.com/256.html
+        url_hash = SearchEngine.hash_url(request.url)
+        file_name = os.path.join(HTML_DIR, urlsplit(request.url).netloc, str(url_hash) + '.html') 
+        print(file_name)            
+        os.makedirs(os.path.join(HTML_DIR, urlsplit(request.url).netloc), exist_ok=True)
+        f = open(file_name, 'w')
+        f.write(soup.prettify())
+        f.close()
+
     def page_crawled(self, response):
         """
         This method is called every time a page has been crawled.
         """
-#        print('Frontier: page_crawled')
-#        print(response.url)
-#        print(len(self.requests_done))
-#        print(len(self.requests))
         self.requests_done.append(response.request)
         self.requests = [req for req in self.requests if req.url != response.request.url]
-#        print(len(self.requests_done))
-#        print(len(self.requests))
 
         html_doc = response.text
         soup = BeautifulSoup(html_doc, 'html.parser')
@@ -161,6 +171,8 @@ class FrontierManager():
         self.weighted_links = [wl for wl in self.weighted_links if wl.url != response.request.url]
         
         self.crawl_book.ws_writerows(WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE'], self.weighted_links)
+        
+        self.page_save_to_file(request=response.request, soup=soup)
         
         print('Frontier: ', len(self.requests), 'pages to crawl -', len(self.requests_done), 'crawled pages -', len(self.ignored_pages), 'ignored pages')
         
@@ -195,8 +207,8 @@ class FrontierManager():
                     self.requests.append(req)
                     self.weighted_links.append(WeightedLink(url=req.url))
 
-            wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
-            self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
+        wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
+        self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
             
             
 class Usage(Exception):
