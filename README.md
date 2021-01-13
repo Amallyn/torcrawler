@@ -53,7 +53,7 @@ Most classes and files are documented. Life cycles can also be found in each cla
 Classes & files
 - python/settings.py
   - [x] All settings like www path and website url to crawl are defined here
-  - [ ] Add proxies settings
+  - [x] Add proxies settings
   - [x] Life cycle: see main()
 - WeightedLink
   - [x] url, its weight/priority, date and notes
@@ -68,25 +68,22 @@ Classes & files
   - [x] search.py
   - [x] Life cycle: see main()
 - CrawlFrontier
-  - [ ] Optimize with set/list and boost c++ lib 
+  - [ ] Optimize with boost c++ lib 
   - [x] frontier.py
   - [ ] Life cycle: see main()
-- WebPage
+- Crawler
   - [x] crawler.py
-  - [ ] Life cycle: see main()
-- GenericCrawler
-  - [x] crawler.py
-  - [ ] Repair auto resume, likely in frontier 
-  - [ ] Optimize with set/list and boost c++ lib 
+  - [x] Repair auto resume, likely in frontier 
+  - [ ] Optimize with boost c++ lib 
   - [ ] Life cycle: see main()
 - NytPage(WebPage)
   - [x] New York Times Crawler
   - [x] nytcrawler.py
-  - [ ] Refactor like Webpage
+  - [ ] Refactor/include in Frontier or later in Middleware or Backend
   - [ ] Life cycle: see main()
 - NytCrawler(GenericCrawler)
   - [x] nytcrawler.py
-  - [ ] Refactor like GenericCrawler
+  - [ ] Refactor/include in Frontier or later in Middleware or Backend
   - [ ] Life cycle: see main()
 - optimize.py
   - [ ] optimize results
@@ -100,10 +97,9 @@ Classes & files
 
 # To do
 - Lifecycle graph documentation
-- Use boost C++ library for set/list optimization
+- Use boost C++ library optimization
 - Ignore lists and regexp to Ignore pages
-- WIP weight/Priority urls supported, not in full effect
-- Repair Auto resume
+- weight/Priority urls supported, not in full effect
 - Use Dockerfile from https://github.com/dperson/torproxy
 - Auto change IP inspired by https://github.com/FrackingAnalysis/PyTorStemPrivoxy
 - Check for DNS Leaks / Add Pihole or a DNS mirror
