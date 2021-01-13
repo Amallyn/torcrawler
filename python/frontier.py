@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-u"""frontier
+u"""Frontier Manager
 
-crawl frontier
-Inspired by Frontera Frontier Class
+Inspired by Frontera Frontier
 """
 
 __usage__ = u"""TODO - Usage: python3 frontier.py [options] [url]
@@ -25,32 +24,34 @@ __copyright__ = u"Copyright [" + __author__ + "]"
 __license__ = u"Licensed under the Apache License, Version 2.0"
 
 import os
-
+import requests    
 from datetime import datetime
-
 # url parser
 from urllib.parse import urlsplit
-
 # html parser
 from bs4 import BeautifulSoup
 
-from settings import WWW_DIR, SEEDS, WORKBOOK
-
-# Serialize progress
+from settings import WWW_DIR, WORKBOOK, MAX_N_REQUESTS, SEEDS
 from workbook import CrawlWorkbook
-
 from link import WeightedLink
+from search import SearchEngine
 
-DEFAULT_LINK_WEIGHT = 1024
-
-class CrawlFrontier():
+class FrontierManager():
+    """
+    Frontier Manager
+    
+    seeds in request form
+    """
+    # seeds to start crawling
+    seeds = []
     # links to crawl
     links = []
     # links crawled
     links_done = []
 
+    # /! Will have to go in a Frontera Middleware at some point
     # weighted links to crawl
-    weighted_links = []
+    weighted_links = None
     # weighted links crawled
     weighted_links_done = []
     # weighted    
@@ -58,115 +59,112 @@ class CrawlFrontier():
     # weighted    
     ignored_pages = set()
 
+    requests = []
+    requests_done = []
+        
+    max_n_requests = 10
+
+    searchengine = None
+        
     crawl_book = None
     
-    def __init__(self, seeds=SEEDS):
+    # /! def __init__(self, settings=SETTINGS, seeds=SETTINGS['SEEDS']):
+    def __init__(self, seeds=[]):
         """ init with seeds
         
         Init with seeds
         Create/Open a file for storing progress
         """
-        self.links = list(seeds)
+        #self.settings = settings
 
-        self.crawl_book = CrawlWorkbook(path=WWW_DIR, url=self.links[0])
+        self.searchengine = SearchEngine()
+        self.searchengine.db_connect()
+
+        self.crawl_book = CrawlWorkbook(path=WWW_DIR, url=seeds[0].url)
         self.crawl_book.wb_open()
 
+        # /! Will have to go in a Frontera Middleware at some point
         # retrieve weighted_links, weighted_links_done...
         self.weighted_links = self.crawl_book.weighted_links        
         self.weighted_links_done = self.crawl_book.weighted_links_done       
         self.ignore_seeds =  self.crawl_book.ignore_seeds
         self.ignored_pages =  self.crawl_book.ignored_pages
-        
-        if self.weighted_links is None:
-            # No links or no file
-            for link in self.links:
-                self.weighted_links.append(WeightedLink(link, '',
-                                           '',
-                                           DEFAULT_LINK_WEIGHT,
-                                           ''))
-        else:
-            # Maintain links and links_done for now
-            for weighted_link in self.weighted_links:
-                self.links.append(weighted_link.url) 
-        if self.weighted_links_done is not None:
-            for weighted_link in self.weighted_links_done:
-                self.links_done.append(weighted_link.url) 
-
-    def __unicode__(self):
-        # based on the first seed website eg. www.nytimes3xbfgragh.onion
-        return urlsplit(self.seeds[0]).netloc
-        
-    def frontier_start(self):
-        pass
       
-    def frontier_stop(self):
+        self.add_seeds(seeds)
+
+        # build requests from weighted_links
+        for wl in self.weighted_links:
+            self.requests.append(requests.Request(url=wl.url))
+        for wl in self.weighted_links_done:
+            self.requests_done.append(requests.Request(url=wl.url))
+ 
+    def add_seeds(self, seeds):
+        """
+        add seeds
+        
+        /! not append
+        """
+        self.seeds = seeds
+        if self.weighted_links is None:
+            self.weighted_links = [WeightedLink(url=seed.url) for seed in self.seeds]
+        if self.weighted_links is not None and len(self.weighted_links) == 0:
+            self.weighted_links = [WeightedLink(url=seed.url) for seed in self.seeds]
+        
+    def request_error(request, error_code):
+        """
+        TODO
+        """
         pass
+                
+    def start(self):
+        # should open workbook as well
+        self.searchengine.db_connect()
+
+    def stop(self):
+        # should save workbook, maybe init values with as well
+        self.searchengine.db_close()
       
     def finished(self):
         """
         Quick check if crawling is finished. Called pretty often, please make sure calls are lightweight.
         """
-        return False
+        return not self.weighted_links
 
-    def weighted_link_remove(self, weighted_link=None):
-        """
-        Remove a weighted_link from self.weighted_links
-        
-        Remove a weighted_link that matches its url value
-        """
-        if weighted_link is not None:
-            for link in self.weighted_links:
-                if link.url == weighted_link.url:
-                    self.weighted_links.remove(link)
-        
-    def page_crawled(self, response, weighted_link=None):
+    def page_crawled(self, response):
         """
         This method is called every time a page has been crawled.
-        
-        /!\ So you can test without the WeightedLink class
-        and only receive the response argument
         """
-        if response.url in self.links:
-            self.links_done.append(response.url)
-            self.links.remove(response.url)
+#        print('Frontier: page_crawled')
+#        print(response.url)
+#        print(len(self.requests_done))
+#        print(len(self.requests))
+        self.requests_done.append(response.request)
+        self.requests = [req for req in self.requests if req.url != response.request.url]
+#        print(len(self.requests_done))
+#        print(len(self.requests))
 
-            # update the progress file
-            web_page_weight = DEFAULT_LINK_WEIGHT
-            
-            # Use soup, again...
-            html_doc = response.text
-            soup = BeautifulSoup(html_doc, 'html.parser')
-            title = u''
-            if soup is not None:            
-                titles = soup.find('title')
-                if titles is not None:
-                    title = titles.string
-            #print('page_crawled: response.url ', response.url)
-            # /!\ If you need to test without the WeightedLink class /!\
-            if weighted_link is None:
-                # remove link before adding title and date as should be in this list
-                weighted_link = WeightedLink(response.url, title,
-                                             datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                             DEFAULT_LINK_WEIGHT,
-                                             '')
-                self.weighted_link_remove(weighted_link)
-                self.weighted_links_done.append(weighted_link)
-                
-                #print('page_crawled None: ', weighted_link)
-            else:
-                self.weighted_links_done.append(weighted_link)
-                self.weighted_link_remove(weighted_link)
-
-
-            self.crawl_book.ws_writeln(WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE'], weighted_link)
+        html_doc = response.text
+        soup = BeautifulSoup(html_doc, 'html.parser')
+        title = u''
+        if soup is not None:            
+            titles = soup.find('title')
+            if titles is not None:
+                title = titles.string
+        
+        # extract first weighted link matchinq response.request.url
+        wl = next((x for x in self.weighted_links if x.url == response.request.url), None)
+        if wl:
+            self.crawl_book.ws_writeln(WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE'], wl)
             self.crawl_book.wb_save()
-            #print('page_crawled: ', weighted_link)
-
-            self.crawl_book.ws_writerows(WORKBOOK['crawler']['worksheet']['ignoredpages']['TITLE'], self.ignored_pages)
+            
+        # update weighted_links from resquests
+        self.weighted_links = [wl for wl in self.weighted_links if wl.url != response.request.url]
         
-        print('Frontier: ', len(self.links), 'pages to crawl -', len(self.links_done), 'crawled pages -', len(self.ignored_pages), 'ignored pages')
+        self.crawl_book.ws_writerows(WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE'], self.weighted_links)
         
-    def get_next_urls(self, max_n_requests=10):
+        print('Frontier: ', len(self.requests), 'pages to crawl -', len(self.requests_done), 'crawled pages -', len(self.ignored_pages), 'ignored pages')
+        
+    def get_next_requests(self, max_n_requests=MAX_N_REQUESTS):
         """
         Returns a list of next urls to be crawled.
         Parameters:	
@@ -178,39 +176,44 @@ class CrawlFrontier():
         list of weighted links.
         """
         # return first max_n_requests links
-        return self.links[:max_n_requests]
+        return self.requests[:max_n_requests]
         #return self.weighted_links[:max_n_requests]
         
-    def links_extracted(self, reponse, links, weighted_links=None):
+    def links_extracted(self, request, links):
         """
         add links to crawl found in response (from request)
-        
-        /!\ you can test without the weighted links parameter
         """
-        for link in links:
-            if link and link not in self.links_done and link not in self.links:
-                self.links.append(link)
-        # print(len(links), "links extracted")
-        # At least one new link, update Pages to crawl Worksheet
-        # /!\ If you need to test without the WeightedLink class /!\
-        if links[0]:
-            if weighted_links is None:
-                weighted_links = []
-                for url in self.links:
-                    weighted_link = WeightedLink(url, '',
-                                                '',
-                                                DEFAULT_LINK_WEIGHT,
-                                                '')
-                    weighted_links.append(weighted_link)
-            # TODO: check for dupes with set before unless checked before the call
-            self.weighted_links.extend(weighted_links)
+        print('Frontier: links_extracted')
+        for req in links:
+            already_there = False
+            # extract first request matchinq request.url
+            inreqs = next((x for x in self.requests if x.url == req.url), None)
+            if not inreqs:
+                # extract first request matchinq request.url
+                inreqsdone = next((x for x in self.requests_done if x.url == req.url), None)
+                if not inreqsdone:
+                    self.requests.append(req)
+                    self.weighted_links.append(WeightedLink(url=req.url))
 
-            self.crawl_book.ws_writeln(WORKBOOK['crawler']['worksheet']['crawledpages']['TITLE'], weighted_link)
-
-            # TODO: check for dupes with set before unless checked before the call
+            # not already in pages to crawl?
+#            for sreq in self.requests:
+#                if req.url == sreq.url:
+#                    already_there = True
+#                    break
+#            if not already_there:
+#                # req already done?
+#                for reqdone in self.requests_done:
+#                    if reqdone.url == req.url:
+#                        already_there = True
+#                        break
+#            if not already_there:
+#                self.requests.append(req)
+#                self.weighted_links.append(WeightedLink(url=req.url))
+                
             wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
-            self.crawl_book.ws_appendrows(wbwsname, weighted_links)
-        
+            self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
+            
+            
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -260,7 +263,7 @@ def main(argv=None):
     w_l_01 = WeightedLink(u'https://www.apple.xlsx/mehpage',
                       u'New York Times - Meh',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                      512,
+                      0.1,
                       u'meh')
                       
     w_l_02 = WeightedLink(u'https://www.apple.xlsx/megapage',
@@ -291,7 +294,27 @@ def main(argv=None):
 
     wbwsname = WORKBOOK['crawler']['worksheet']['ignoredpages']['TITLE']
     cwb.ws_writerows(wbwsname, [ w_l_03, w_l_04 ])
-                    
+
+    from settings import SEEDS
+    frontier = FrontierManager(seeds=[requests.Request(url=url) for url in SEEDS])
+    print('--- Tests ---')
+    print('------')
+    print(frontier.seeds[0].url)
+    print('------')
+    print(frontier.requests[0].url)
+    print(len(frontier.requests))
+    print(len(frontier.requests_done))
+
+    print('------')
+    print(frontier.weighted_links)
+    wl = next((x for x in frontier.weighted_links if x.url == 'https://www.apple.xlsx/mehpage'), None)
+    print('------')
+    print(wl)
+    frontier.weighted_links = [wl for wl in frontier.weighted_links if wl.url != 'https://www.apple.xlsx/mehpage']
+    print('------')
+    print(frontier.weighted_links)
+    print('--- End Tests ---')
+    
 if __name__ == "__main__":
     import sys
     print("\n" + __doc__ + "\n" + __copyright__ + "\n" + __license__ +"\n" )

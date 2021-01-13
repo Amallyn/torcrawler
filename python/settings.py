@@ -22,12 +22,16 @@ SEEDS = {'https://www.nytimes3xbfgragh.onion/'}
 #   Download pages are stored in HTML_DIR/url.netloc
 #     eg. /var/www/html/www.apple.com/id.html
 
+PROXIES = dict(http='socks5h://localhost:9150', https='socks5h://localhost:9150')
+
 WWW_DIR = u'/var/www'
 HTML_SUBDIR = u'html'
 
 # html path eg. /var/www/html
 #   workbooks and downloaded pages path
 HTML_DIR = os.path.join(WWW_DIR, HTML_SUBDIR)
+
+MAX_N_REQUESTS = 10
 
 DATABASES = {
     'manticore': {
@@ -78,6 +82,9 @@ WORKBOOK = {
         } # end worksheet
     } # end crawler
 } # end workbook
+
+DEFAULT_WEIGHT = 0.1
+
         
 def main(argv=None):
     """

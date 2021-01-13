@@ -14,6 +14,8 @@ __license__ = u"Licensed under the Apache License, Version 2.0"
 from datetime import datetime
 from dataclasses import dataclass
 
+from settings import DEFAULT_WEIGHT
+
 @dataclass
 class WeightedLink():
     """Weighted Link
@@ -23,11 +25,15 @@ class WeightedLink():
     url: str
     title: str
     date: datetime
-    weight: int
+    weight: float
     notes: str
 
-    def __unicode__(self):
-        return url
+    def __init__(self, url=u'', title=u'', date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), weight=DEFAULT_WEIGHT, notes=u''):
+        self.url = url
+        self.title = title
+        self.date = date
+        self.weight = weight
+        self.notes = notes
          
 if __name__ == "__main__":
     print("\n" + __doc__ + "\n" + __copyright__ + "\n" + __license__ +"\n" )

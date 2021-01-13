@@ -314,29 +314,29 @@ def main(argv=None):
         print(__usage__)
         sys.exit(2)
 
-    w_l_00 = WeightedLink(u'https://www.apple.xlsx/',
+    w_l_00 = WeightedLink(u'https://www.nytimes3xbfgragh.onion/',
                       u'New York Times',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       1024,
                       u'bla bla')
                       
-    w_l_01 = WeightedLink(u'https://www.apple.xlsx/mehpage',
+    w_l_01 = WeightedLink(u'hhttps://www.nytimes3xbfgragh.onion/',
                       u'New York Times - Meh',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                      512,
+                      0.1,
                       u'meh')
                       
-    w_l_02 = WeightedLink(u'https://www.apple.xlsx/megapage',
+    w_l_02 = WeightedLink(u'https://www.nytimes3xbfgragh.onion/',
                       u'New York Times - mega',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       2048,
                       u'mega bla bla')
-    w_l_03 = WeightedLink(u'https://www.apple.xlsx/useless',
+    w_l_03 = WeightedLink(u'https://www.nytimes3xbfgragh.onion/',
                       u'New York Times - useless',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       2048,
                       u'mega no no')
-    w_l_04 = WeightedLink(u'https://www.apple.xlsx/nopage',
+    w_l_04 = WeightedLink(u'https://www.nytimes3xbfgragh.onion/',
                       u'New York Times - mega',
                       datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       2048,
