@@ -195,21 +195,6 @@ class FrontierManager():
                     self.requests.append(req)
                     self.weighted_links.append(WeightedLink(url=req.url))
 
-            # not already in pages to crawl?
-#            for sreq in self.requests:
-#                if req.url == sreq.url:
-#                    already_there = True
-#                    break
-#            if not already_there:
-#                # req already done?
-#                for reqdone in self.requests_done:
-#                    if reqdone.url == req.url:
-#                        already_there = True
-#                        break
-#            if not already_there:
-#                self.requests.append(req)
-#                self.weighted_links.append(WeightedLink(url=req.url))
-                
             wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
             self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
             
