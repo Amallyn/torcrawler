@@ -98,7 +98,8 @@ Classes & files
 # To do
 - Lifecycle graph documentation
 - Use boost C++ library optimization
-- Ignore lists and regexp to Ignore pages
+- [x] Ignore lists
+- [ ] regexp to Ignore pages
 - weight/Priority urls supported, not in full effect
 - Use Dockerfile from https://github.com/dperson/torproxy
 - Auto change IP inspired by https://github.com/FrackingAnalysis/PyTorStemPrivoxy
