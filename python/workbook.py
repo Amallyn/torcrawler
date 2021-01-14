@@ -53,7 +53,7 @@ class CrawlWorkbook():
     weighted_links = set()
     weighted_links_done = []
     ignore_seeds = []
-    ignored_pages = set()
+    ignored_pages = []
     
     def __init__(self, path='/var/www', url='http://localhost'):
       """

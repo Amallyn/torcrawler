@@ -27,7 +27,7 @@ from pathlib import Path
 import requests    
 from datetime import datetime
 # url parser
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlparse, urlsplit
 # html parser
 from bs4 import BeautifulSoup
 
@@ -55,9 +55,9 @@ class FrontierManager():
     # weighted links crawled
     weighted_links_done = []
     # weighted    
-    ignore_seeds = {}
+    ignore_seeds = []
     # weighted    
-    ignored_pages = set()
+    ignored_pages = []
 
     requests = []
     requests_done = []
@@ -68,6 +68,8 @@ class FrontierManager():
         
     crawl_book = None
     
+    url_base = ''
+    
     # /! def __init__(self, settings=SETTINGS, seeds=SETTINGS['SEEDS']):
     def __init__(self, seeds=[]):
         """ init with seeds
@@ -76,6 +78,9 @@ class FrontierManager():
         Create/Open a file for storing progress
         """
         #self.settings = settings
+        url = next(iter(SEEDS))
+        parsed_uri = urlparse(url)
+        self.url_base = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
 
         self.searchengine = SearchEngine()
         self.searchengine.db_connect()
@@ -106,14 +111,18 @@ class FrontierManager():
                         '/section/world', '/video/world', '/section/food', '/section/arts',
                         '/section/sports', '/section/science', '/section/books', '/section/travel', 
                         '/section/realestate', '/section/fashion', '/section/technology',
-                        '/section/politics', '/section/business', '/section/style',
+                        '/section/politics', '/section/business', '/section/style', '/section/well',
                         '/section/style/love', '/section/us', '/section/video', '/section/interactive',
-                        '/section/t-magazine',
-                        'section/fashion', '/issue/fashion',
+                        '/section/magazine', '/international',
+                        '/section/t-magazine', '/section/live', '/live', '/video', '/interactive',
+                        '/issue/fashion',
+                        '/subscription', '/subscriptions',
                         '/section/business/dealbook', '/pages/business/dealbook',
                         '/privacy'
                         ]
-        #if self.ignore_seeds is None:
+        if not self.ignore_seeds:
+            self.ignore_seeds = [WeightedLink(url=urljoin(self.url_base, suffix)) for suffix in ignore_suffixes]
+            self.crawl_book.ws_writerows(WORKBOOK['crawler']['worksheet']['ignoreseeds']['TITLE'], self.ignore_seeds)
         
     def add_seeds(self, seeds):
         """
@@ -226,8 +235,9 @@ class FrontierManager():
         print('Frontier: links_extracted')
         for req in links:
             already_there = False
-            if self.in_ignore_seeds(req) and not self.in_ignored_pages(req):
-                self.ignored_pages.append(WeightedLink(url=req.url))
+            if self.in_ignore_seeds(req):
+                if not self.in_ignored_pages(req):
+                    self.ignored_pages.append(WeightedLink(url=req.url))
             else:
                 # extract first request matchinq request.url
                 inreqs = next((x for x in self.requests if x.url == req.url), None)
@@ -240,6 +250,8 @@ class FrontierManager():
 
         wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
         self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
+        wbwsname = WORKBOOK['crawler']['worksheet']['ignoredpages']['TITLE']
+        self.crawl_book.ws_writerows(wbwsname, self.ignored_pages)
             
             
 class Usage(Exception):
