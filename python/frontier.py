@@ -8,13 +8,11 @@ Inspired by Frontera Frontier
 __usage__ = u"""TODO - Usage: python3 frontier.py [options] [url]
 
 Options:
-  -u ..., --url=...       Website URL to crawl
   -h, --help              show this help
-  -p, --path              www path where files were stored eg. /var/www
   -d                      show debugging information
 
 Examples:
-  python3 frontier.py --url='https://www.nytimes3xbfgragh.onion/' --path='/var/www'
+  python3 frontier.py
 """
 
 __author__ = u"M0t13y"
@@ -99,6 +97,23 @@ class FrontierManager():
             self.requests.append(requests.Request(url=wl.url))
         for wl in self.weighted_links_done:
             self.requests_done.append(requests.Request(url=wl.url))
+
+        # ignore list
+        ignore_suffixes = ['/es/', '/fr/', '/ca/', '/newsletters', '/2021/',
+                        '/2020/01/', '/2020/02/', '/2020/03/', '/2020/04/', '/2020/05/', '/2020/06/',
+                        '/2020/07/', '/2020/08/', '/2020/09/', '/2020/10/',
+                        '/2019/', '/2018/', '/2017/', '/2016/', '/2015/', '/2014/',
+                        '/section/world', '/video/world', '/section/food', '/section/arts',
+                        '/section/sports', '/section/science', '/section/books', '/section/travel', 
+                        '/section/realestate', '/section/fashion', '/section/technology',
+                        '/section/politics', '/section/business', '/section/style',
+                        '/section/style/love', '/section/us', '/section/video', '/section/interactive',
+                        '/section/t-magazine',
+                        'section/fashion', '/issue/fashion',
+                        '/section/business/dealbook', '/pages/business/dealbook',
+                        '/privacy'
+                        ]
+        #if self.ignore_seeds is None:
         
     def add_seeds(self, seeds):
         """
@@ -191,6 +206,19 @@ class FrontierManager():
         return self.requests[:max_n_requests]
         #return self.weighted_links[:max_n_requests]
         
+    def in_ignore_seeds(self, link):
+        """
+        returns True if link (request) is in self.ignore_seeds
+        """        
+        return next((x for x in self.ignore_seeds if link.url.startswith(x.url)), None)
+
+    def in_ignored_pages(self, link):
+        """
+        returns True if link (request) is in self.ignored_pages
+        """        
+        return next((x for x in self.ignored_pages if x.url == link.url), None)
+
+
     def links_extracted(self, request, links):
         """
         add links to crawl found in response (from request)
@@ -198,14 +226,17 @@ class FrontierManager():
         print('Frontier: links_extracted')
         for req in links:
             already_there = False
-            # extract first request matchinq request.url
-            inreqs = next((x for x in self.requests if x.url == req.url), None)
-            if not inreqs:
+            if self.in_ignore_seeds(req) and not self.in_ignored_pages(req):
+                self.ignored_pages.append(WeightedLink(url=req.url))
+            else:
                 # extract first request matchinq request.url
-                inreqsdone = next((x for x in self.requests_done if x.url == req.url), None)
-                if not inreqsdone:
-                    self.requests.append(req)
-                    self.weighted_links.append(WeightedLink(url=req.url))
+                inreqs = next((x for x in self.requests if x.url == req.url), None)
+                if not inreqs:
+                    # extract first request matchinq request.url
+                    inreqsdone = next((x for x in self.requests_done if x.url == req.url), None)
+                    if not inreqsdone:
+                        self.requests.append(req)
+                        self.weighted_links.append(WeightedLink(url=req.url))
 
         wbwsname = WORKBOOK['crawler']['worksheet']['tocrawlpages']['TITLE']
         self.crawl_book.ws_writerows(wbwsname, self.weighted_links)
