@@ -47,6 +47,7 @@ Development stack:
 - No Frontera integration for now
 
 - Main Flux Diagram added - discovered db_replace_into missing from the code 🙏
+https://github.com/M0t13y/torcrawler/blob/master/flux.jpeg
 - Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
 
 Classes & files
