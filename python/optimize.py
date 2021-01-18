@@ -57,9 +57,9 @@ class Optimize():
         self.ignore_seeds =  self.crawl_book.ignore_seeds
         self.ignored_pages =  self.crawl_book.ignored_pages
 
-    def rewrite_new_seeds(self)
+    def rewrite_check_seeds(self)
         """
-        Rewrite the crawlbook based on new seeds present
+        Rewrite the crawlbook depending on seeds
         """
         pass
         
