@@ -43,9 +43,6 @@ Development stack:
 
 # Life cycle
 
-- Roadmap: Middleware and backend
-- No Frontera integration for now
-
 - Main Flux Diagram added - discovered db_replace_into missing from the code 🙏
 https://github.com/M0t13y/torcrawler/blob/master/flux.jpeg
 - Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
@@ -96,7 +93,6 @@ Classes & files
 - crc32 replaced by crc32(sha256(url))
 
 # To do
-- Lifecycle graph documentation
 - Use boost C++ library optimization
 - [x] Ignore lists
 - [ ] regexp to Ignore pages
@@ -104,6 +100,8 @@ Classes & files
 - Use Dockerfile from https://github.com/dperson/torproxy
 - Auto change IP inspired by https://github.com/FrackingAnalysis/PyTorStemPrivoxy
 - Check for DNS Leaks / Add Pihole or a DNS mirror
+- Roadmap: Middleware and backend
+- No Frontera integration for now
 - Code cleanup, variable checks
 - Refactor as needed for specific crawling
 - Python tests
