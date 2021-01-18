@@ -43,12 +43,11 @@ Development stack:
 
 # Life cycle
 
-**Complete rewrite in progress**
-- Crawler - FrontierManager in progress
-- We'll see for Middleware and backend
+- Roadmap: Middleware and backend
 - No Frontera integration for now
 
-Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
+- Main Flux Diagram added - discovered db_replace_into missing from the code 🙏
+- Most classes and files are documented. Life cycles can also be found in each class __doc__, __usage__ and main()
 
 Classes & files
 - python/settings.py
