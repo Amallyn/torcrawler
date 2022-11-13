@@ -8,7 +8,7 @@
 
 Start the Search UI, the tor socks proxy and the web crawler:
 ```
-  git clone https://github.com/M0t13y/torcrawler.git torcrawler
+  git clone https://github.com/Amallyn/torcrawler.git torcrawler
   cd torcrawler
   docker-compose up -d
   cd python
